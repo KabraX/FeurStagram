@@ -39,7 +39,8 @@ Code: `SavedButton.java` (icon, touch/click/accessibility, deep link),
   pass. **That last step still needs a runtime check on a patched build.**
 - To try another route without rebuilding (`--debug` build only):
   ```sh
-  adb shell am broadcast -p <package> -a com.feurstagram.debug.SET       --es key saved_uri --es value "instagram://<candidate>"
+  adb shell am broadcast -p <package> -a com.feurstagram.debug.SET \
+      --es key saved_uri --es value "instagram://<candidate>"
   ```
 
 ## Slot structure (uiautomator, 451.0.0.53.80)
