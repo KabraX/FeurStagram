@@ -22,42 +22,38 @@ Code: `SavedButton.java` (icon, touch/click/accessibility, deep link),
 - **Degrades to nothing.** If `clips_tab` is missing in a build, no button appears.
   If the deep link has no handler, the tap falls back to the Profile tab.
 
-## Verifying the destination (required)
+## Destination (verified statically on 451.0.0.53.80)
 
-`Config.DEFAULT_SAVED_URI` (`instagram://saved`) is **unverified**. Confirm it before
-relying on it.
+- `instagram://saved` is in the router table (`X.013D`, jadx name `X.C013D.A1O`) and
+  resolves to `com.instagram.urlhandlers.saved.SavedUrlHandlerActivity`, with access
+  scope **`SAME_APP`**. Public routes carry `PUBLIC`.
+- `SavedUrlHandlerActivity.A2V` only pushes the Saved fragment for the current session.
+- Its base, `MainSessionUrlHandlerActivity.onCreate`, reads a bundle holding
+  `IgSessionManager.SESSION_TOKEN_KEY`, which only the router adds, and `finish()`es
+  without it. So the handler cannot be launched by explicit component: the button has to
+  go through the deep link.
+- The router derives the caller from the incoming intent (`X.010T.A00` →
+  `C010U.A00(context, intent)`). Observed: `adb shell am start -d instagram://saved`
+  (uid 2000, a foreign caller) is resolved but dropped, and lands on the feed. That is
+  expected for `SAME_APP`. The button fires the link from inside the app, so it should
+  pass. **That last step still needs a runtime check on a patched build.**
+- To try another route without rebuilding (`--debug` build only):
+  ```sh
+  adb shell am broadcast -p <package> -a com.feurstagram.debug.SET       --es key saved_uri --es value "instagram://<candidate>"
+  ```
 
-1. Quick runtime probe on a device with stock Instagram signed in:
-   ```sh
-   adb shell am start -a android.intent.action.VIEW -d "instagram://saved" com.instagram.android
-   ```
-   Saved posts on screen → confirmed. Home/nothing → wrong route.
-2. Static: decompile the APK with jadx and search the deep-link router.
-   - `AndroidManifest.xml`: the activity with `<data android:scheme="instagram"/>`
-     (the URL handler) and any `https` host filters for `instagram.com`.
-   - Strings near other known routes in the router (`"direct-inbox"`, `"camera"`,
-     `"user"`, `"media"`): look for `saved`, `collection`, `saved_collection`.
-   - Web form as a candidate: `https://www.instagram.com/<username>/saved/`
-     (needs the username, so prefer an `instagram://` route).
-3. Try a candidate on the patched build without rebuilding (`--debug` build):
-   ```sh
-   adb shell am broadcast -p <package> -a com.feurstagram.debug.SET \
-       --es key saved_uri --es value "instagram://<candidate>"
-   ```
-   Then put the confirmed value in `Config.DEFAULT_SAVED_URI`.
+## Slot structure (uiautomator, 451.0.0.53.80)
 
-Note: `am monitor` will not reveal the route — Saved is a fragment inside the main
-activity, not a separate activity.
-
-## Inspecting the slot
-
-```sh
-adb shell uiautomator dump /sdcard/ui.xml && adb pull /sdcard/ui.xml
 ```
-Look for `resource-id="…:id/clips_tab"` and its children. `SavedButton.findIcon` takes
-the largest visible `ImageView` in the slot; if the icon is drawn by a non-`ImageView`
-(custom view, Lottie wrapper), the button still works but keeps the Reels glyph —
-adapt `findIcon` then. Android Studio's Layout Inspector shows the same tree live.
+LinearLayout tab_bar
+  FrameLayout feed_tab     desc="Inicio"
+  FrameLayout clips_tab    desc="Reels"     -> ImageView tab_icon
+  FrameLayout direct_tab   desc="Mensaje"   -> ImageView tab_icon, TextView notification
+  FrameLayout search_tab   desc="Buscar y explorar"
+  FrameLayout profile_tab  -> ViewGroup wrapper -> ImageView tab_avatar, View led_badge
+```
+`SavedButton` takes the `tab_icon` child, and falls back to the largest `ImageView` if
+the id is renamed.
 
 ## Test checklist
 

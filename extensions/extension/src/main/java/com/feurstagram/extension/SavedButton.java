@@ -102,7 +102,11 @@ final class SavedButton {
         tab.setLongClickable(false);
         tab.setAccessibilityDelegate(ACCESSIBILITY);
 
-        ImageView icon = findIcon(tab);
+        // Every bottom tab holds its glyph in a "tab_icon" ImageView; the scan is
+        // the fallback for a build that renames it.
+        int iconId = Hiders.resolveId(tab.getContext(), "tab_icon");
+        View named = iconId == 0 ? null : tab.findViewById(iconId);
+        ImageView icon = named instanceof ImageView ? (ImageView) named : findIcon(tab);
         if (icon != null && !(icon.getDrawable() instanceof BookmarkDrawable)) {
             icon.setImageDrawable(new BookmarkDrawable(icon.getContext(), icon.getDrawable()));
         }
@@ -135,8 +139,11 @@ final class SavedButton {
     /**
      * Open the saved-posts screen through Instagram's own deep-link router. The
      * intent is pinned to our own package, so a {@code --clone} build opens itself
-     * rather than the stock app. If nothing handles the link, fall back to the
-     * profile tab, where Saved is one tap away in the menu.
+     * rather than the stock app, and it is sent from inside the app, which is what
+     * the route's {@code SAME_APP} scope requires. Launching the handler activity
+     * directly is not an option: it needs a session-token bundle only the router
+     * builds, and finishes without one. If nothing handles the link, fall back to
+     * the profile tab, where Saved is in the menu.
      */
     static void open(View v) {
         Context context = Settings.getActivityContext(v);

@@ -179,10 +179,12 @@ public final class Config {
     public static boolean isSavedButtonEnabled() { return getBlocked("saved_button", false); }
 
     /**
-     * Deep link the Saved button opens. [UNVERIFIED] Instagram's internal router
-     * is not documented; this default must be confirmed against the APK's
-     * deep-link table (see docs/SAVED_BUTTON.md). Overridable without a rebuild
-     * through the debug bridge: {@code SET --es key saved_uri --es value <uri>}.
+     * Deep link the Saved button opens. Instagram's router (451.0.0.53.80) maps it
+     * to {@code com.instagram.urlhandlers.saved.SavedUrlHandlerActivity} with the
+     * {@code SAME_APP} access scope: honoured when the app opens it itself,
+     * dropped (lands on the feed) when another app or adb does. See
+     * docs/SAVED_BUTTON.md. Overridable without a rebuild through the debug
+     * bridge: {@code SET --es key saved_uri --es value <uri>}.
      */
     public static final String DEFAULT_SAVED_URI = "instagram://saved";
 
