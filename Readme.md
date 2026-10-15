@@ -197,6 +197,8 @@ device — with:
   stays, since long-pressing it is how you get back here. A swipe that would
   land on a hidden tab carries straight on to the next visible one, so a hidden
   section stays hidden instead of being one flick away.
+  *Saved* (off by default) turns the Reels slot into a shortcut to your saved
+  posts; the Reels page behind it stays unreachable by tap or swipe.
 - **Feed** — *Following feed only*: restrict the Home Feed to accounts you
   follow (chronological), instead of the recommended feed. Has effect only when
   the Home Feed is left unblocked.
@@ -289,6 +291,7 @@ Feurstagram/
         ├── Display.java          # Window colour-mode control (Force dark / SDR)
         ├── Hiders.java           # Nav-tab / Notes / Instants hiders + landing redirect
         ├── HiddenTabSwipeSkipper.java  # Keeps swipes off hidden tabs' pages
+        ├── SavedButton.java      # Optional Saved shortcut in the Reels slot
         ├── DebugBridge.java      # Dev-only ADB bridge over the settings (--debug builds)
         └── UpdateChecker.java    # On-launch GitHub release check
 ```
