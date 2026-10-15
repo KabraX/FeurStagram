@@ -1,6 +1,7 @@
 package com.feurstagram.extension;
 
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.ColorStateList;
@@ -15,6 +16,8 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.SystemClock;
+import android.util.Base64;
 import android.view.MotionEvent;
 import android.view.SoundEffectConstants;
 import android.view.View;
@@ -22,6 +25,8 @@ import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.ImageView;
 import android.widget.Toast;
+
+import java.nio.charset.StandardCharsets;
 
 /**
  * The optional "Saved" button: the bottom bar's Reels slot, re-skinned with a
@@ -151,6 +156,7 @@ final class SavedButton {
         try {
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(Config.getSavedUri()));
             intent.setPackage(context.getPackageName());
+            intent.putExtra(CALLER_IDENTITY_EXTRA, callerIdentity(context));
             if (!(context instanceof Activity)) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(intent);
         } catch (Throwable t) {
@@ -162,6 +168,29 @@ final class SavedButton {
                 Toast.makeText(context, "Saved posts are unavailable", Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    /**
+     * Intent extra Meta's deep-link router reads the caller's identity from. A
+     * plain startActivity from inside the app carries none, so the router treats
+     * it as a foreign (PUBLIC) caller and drops SAME_APP routes such as Saved.
+     */
+    private static final String CALLER_IDENTITY_EXTRA = "_ci_";
+
+    /**
+     * The app's own caller identity, in the shape the router parses: an immutable
+     * PendingIntent created by this package, whose tag (its base intent's action)
+     * is URL-safe, unpadded Base64 of {@code {"t": wall-clock ms, "r": elapsed
+     * ms}}. The router takes package and signature from the PendingIntent's
+     * creator, so this can only ever vouch for the app that builds it.
+     */
+    private static PendingIntent callerIdentity(Context context) {
+        String meta = "{\"t\":\"" + System.currentTimeMillis()
+                + "\",\"r\":\"" + SystemClock.elapsedRealtime() + "\"}";
+        String tag = Base64.encodeToString(meta.getBytes(StandardCharsets.UTF_8),
+                Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING);
+        Intent marker = new Intent(tag).setPackage(context.getPackageName());
+        return PendingIntent.getBroadcast(context, 0, marker, PendingIntent.FLAG_IMMUTABLE);
     }
 
     /**

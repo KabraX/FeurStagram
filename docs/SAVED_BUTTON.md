@@ -22,7 +22,7 @@ Code: `SavedButton.java` (icon, touch/click/accessibility, deep link),
 - **Degrades to nothing.** If `clips_tab` is missing in a build, no button appears.
   If the deep link has no handler, the tap falls back to the Profile tab.
 
-## Destination (verified statically on 451.0.0.53.80)
+## Destination (451.0.0.53.80)
 
 - `instagram://saved` is in the router table (`X.013D`, jadx name `X.C013D.A1O`) and
   resolves to `com.instagram.urlhandlers.saved.SavedUrlHandlerActivity`, with access
@@ -33,10 +33,17 @@ Code: `SavedButton.java` (icon, touch/click/accessibility, deep link),
   without it. So the handler cannot be launched by explicit component: the button has to
   go through the deep link.
 - The router derives the caller from the incoming intent (`X.010T.A00` →
-  `C010U.A00(context, intent)`). Observed: `adb shell am start -d instagram://saved`
-  (uid 2000, a foreign caller) is resolved but dropped, and lands on the feed. That is
-  expected for `SAME_APP`. The button fires the link from inside the app, so it should
-  pass. **That last step still needs a runtime check on a patched build.**
+  `C010U.A00` → `C01lB.A01` → `C07oe.A00`). It reads Meta's caller-identity extra
+  `_ci_`: a `PendingIntent` whose creator gives the package and signature, and whose tag
+  is URL-safe unpadded Base64 of `{"t": ms, "r": elapsed ms}`, valid for a day. With no
+  identity, a same-process launch counts as **PUBLIC** and the `SAME_APP` route is
+  dropped silently (you land on the feed). `SavedButton.callerIdentity` attaches the
+  app's own identity. It can only vouch for the package that creates it.
+- **Verified at runtime** (451.0.0.53.80, `--clone --debug`). Tapping the button runs
+  `UrlHandlerLauncherActivity` → `UrlHandlerActivity` → `SavedUrlHandlerActivity`, and
+  the Saved screen opens with the account's saved posts. Without `_ci_`, the chain stops
+  at `UrlHandlerActivity`. `adb shell am start -d instagram://saved` is dropped for the
+  same reason.
 - To try another route without rebuilding (`--debug` build only):
   ```sh
   adb shell am broadcast -p <package> -a com.feurstagram.debug.SET \
