@@ -10,6 +10,9 @@ All notable changes to Feurstagram should be documented in this file.
   Instagram otherwise keeps three taps deep (Profile → menu → Saved). The Reels page
   behind the slot stays unreachable by tap or swipe, also under the permanent lock. See
   [docs/SAVED_BUTTON.md](docs/SAVED_BUTTON.md).
+- **Saved home deep link** patch. Instagram's `instagram://saved` link always opened an
+  older, collections-only Saved screen. It now opens the same tabbed screen as
+  Profile → menu → Saved, following the same server-side gate.
 
 ## v451-0-0-20-80
 

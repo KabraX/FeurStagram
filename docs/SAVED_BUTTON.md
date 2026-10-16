@@ -5,7 +5,8 @@ Saved tab, so the button borrows the **Reels slot** (`clips_tab`), which is hidd
 default: it is shown, re-skinned with a bookmark drawn in code, and its taps are taken
 over. Toggle: *Settings → Navigation bar → Saved* (`saved_button`, off by default).
 
-Code: `SavedButton.java` (icon, touch/click/accessibility, deep link),
+Code: `SavedButton.java` (icon, touch/click/accessibility, deep link), the *Saved home
+deep link* patch (`patches/.../ui/SavedHomePatch.kt`),
 `Hiders.SavedTabHook` (re-applies it every layout pass), plus small guards in
 `Hiders.VisibilityHider`, `HiddenTabSwipeSkipper` and `Settings`.
 
@@ -44,6 +45,19 @@ Code: `SavedButton.java` (icon, touch/click/accessibility, deep link),
   the Saved screen opens with the account's saved posts. Without `_ci_`, the chain stops
   at `UrlHandlerActivity`. `adb shell am start -d instagram://saved` is dropped for the
   same reason.
+- **Two Saved screens.** Profile → menu → Saved goes through a factory (`X.0iBM.A00`,
+  `Fragment (UserSession, tab)`) that returns the tabbed Saved home (`X.0JSB`, module
+  `saved_tabbed_home`: pills, "Reels and posts", *Manage*) when a server-side gate allows
+  it, and the older collections-only screen (`X.0JU4`) otherwise. `SavedUrlHandlerActivity`
+  skips the factory and always builds `X.0JU4`, so the link opened the older screen, whose
+  "All posts" cover did not even load. The *Saved home deep link* patch
+  (`SavedHomePatch.kt`) swaps that call for the factory, so the link follows the same gate
+  as the menu. It finds the factory structurally (static, returns `Fragment`, first
+  parameter `UserSession`, calls into the class holding `saved_tabbed_home`) and replaces
+  the one static call the handler and the factory share. Verified on 451.0.0.53.80: the
+  button opens the tabbed screen; pills, opening a post and back all work. The screen
+  shows no ← in its header, because it is the root of the handler's own activity; the
+  system back gesture closes it.
 - To try another route without rebuilding (`--debug` build only):
   ```sh
   adb shell am broadcast -p <package> -a com.feurstagram.debug.SET \

@@ -376,6 +376,15 @@ dark** toggle is on (default), keeping blacks deep; turning it off passes
 Instagram's original colour mode through untouched. It hooks the framework
 `Window.setColorMode` call, so it too needs no per-version maintenance.
 
+### Saved home deep link
+Instagram has two Saved screens: the tabbed one the profile menu opens, and an
+older collections-only one. The `instagram://saved` deep link, which the optional
+Saved button opens, always built the older one. A patch points it at the same
+factory the menu uses, so both open the tabbed screen whenever Instagram's own
+server-side gate allows it. The factory and the call it replaces are found by
+structure and by the screen's `saved_tabbed_home` module name, not by obfuscated
+names.
+
 #### Blocked network paths
 
 | Path / pattern | Purpose | Toggleable |
