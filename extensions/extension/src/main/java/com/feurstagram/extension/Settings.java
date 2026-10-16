@@ -342,12 +342,15 @@ public final class Settings {
 
         ScrollView scroll = new ScrollView(context);
         scroll.setVerticalScrollBarEnabled(false);
-        scroll.setClipToPadding(false);
-        scroll.setPadding(0, 0, 0, dp(context, 12));
+        // The fading edge is drawn inside the scroller's padding, so bottom
+        // padding here would leave a band of unfaded rows under the fade. The
+        // breathing room goes on the content instead, keeping the fade flush
+        // with the scroller's edge, right above the action row.
         scroll.setVerticalFadingEdgeEnabled(true);
         scroll.setFadingEdgeLength(dp(context, 28));
         LinearLayout content = new LinearLayout(context);
         content.setOrientation(LinearLayout.VERTICAL);
+        content.setPadding(0, 0, 0, dp(context, 12));
         scroll.addView(content);
         root.addView(scroll, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
@@ -421,12 +424,15 @@ public final class Settings {
 
         ScrollView scroll = new ScrollView(context);
         scroll.setVerticalScrollBarEnabled(false);
-        scroll.setClipToPadding(false);
-        scroll.setPadding(0, 0, 0, dp(context, 12));
+        // The fading edge is drawn inside the scroller's padding, so bottom
+        // padding here would leave a band of unfaded rows under the fade. The
+        // breathing room goes on the content instead, keeping the fade flush
+        // with the scroller's edge, right above the action row.
         scroll.setVerticalFadingEdgeEnabled(true);
         scroll.setFadingEdgeLength(dp(context, 28));
         LinearLayout column = new LinearLayout(context);
         column.setOrientation(LinearLayout.VERTICAL);
+        column.setPadding(0, 0, 0, dp(context, 12));
         scroll.addView(column);
         root.addView(scroll, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
